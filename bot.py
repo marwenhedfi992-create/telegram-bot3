@@ -5,7 +5,7 @@ import os
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 # 🔴 حط ID متاعك هنا
-ADMIN_ID = 123456789  
+ADMIN_ID = 7644137727 
 
 MENU = ReplyKeyboardMarkup(
     [
