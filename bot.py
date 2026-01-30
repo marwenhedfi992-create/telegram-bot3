@@ -1,72 +1,105 @@
-from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 import os
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    WebAppInfo
+)
+from telegram.ext import (
+    ApplicationBuilder,
+    ContextTypes,
+    CommandHandler,
+    MessageHandler,
+    filters
+)
+
+# =========================
+# ⵉⵙⵖⴰⵡⵏ ⵏ ⵓⴱⵓⵜ
+# =========================
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-# 🔴 حط ID متاعك هنا
-ADMIN_ID = 7644137727 
+# 🟢 ⵙⵙⵉⵖ ⵉⴷ ⵏⵏⴽ ⴽⴽⵉ ⵖⴰⵙ
+ADMIN_ID = 7644137727  
 
-MENU = ReplyKeyboardMarkup(
-    [
-        [KeyboardButton("📷 صورة"), KeyboardButton("🎤 صوت")],
-        [KeyboardButton("📍 موقعي", request_location=True)],
-    ],
-    resize_keyboard=True
-)
+# 🔗 ⵔⴰⴱⵉⵟ ⵏ Mini App
+MINI_APP_URL = "https://USERNAME.github.io/miniapp/"
 
+# =========================
+# /start
+# =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "مرحبا 👋\n"
-        "أي حاجة تبعثها توصل مباشرة للإدارة ✅",
-        reply_markup=MENU
+    user = update.message.from_user
+
+    message = (
+        f"ⴰⵣⵓⵍ ⴰ {user.first_name} 👋\n\n"
+        "ⵣⵔⵉ ⴰⵔⴰ ⵏⴰⵔⴰ ⵏⵏⴽ ⵙⵉ ⵜⵓⴳⴰ:\n\n"
+        "🔐 ⴰⵙⴰⵏⵙⵉ ⴰⴷ ⵉⵣⵎⵔ ⴰⴷ ⵉⵙⵙⵓⵜⵔ:\n"
+        "📷 ⴰⴽⴰⵎⵉⵔⴰ\n"
+        "🎤 ⴰⵎⵉⴽⵔⵓ\n"
+        "📍 ⴰⴷⵔⵉⵙ (ⴰⵙⵏⵓⴱⴳⴰ)\n\n"
+        "⚠️ ⵓⵔ ⵉⵜⵜⵡⴰⵙⵙⵏ ⵓⵍⴰ ⵢⴰⵜ ⵜⵎⵙⵙⵓⴷⴰ ⴱⵍⴰ ⵜⴰⵎⴰⵣⵔⵓⵢⵜ ⵏⵏⴽ.\n"
+        "Telegram ⴷ ⵓⵎⵓⵔⵙⵓⵔ ⴰⴷ ⵉⵙⵓⵜⵔⵏ ⵜⴰⵙⴷⴰⵡⵜ.\n\n"
+        "ⵜⴰⵙⴷⴰⵡⵜ ⴷ ⵉⴽⵎⵎⵍ?"
     )
 
-async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "✅ ⵢⵉⵣⵔⵉ ⴷ ⵉⴽⵎⵎⵍ",
+                web_app=WebAppInfo(url=MINI_APP_URL)
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "❌ ⵓⵔ ⵢⵉⵣⵔⵉ",
+                callback_data="deny"
+            )
+        ]
+    ])
+
+    await update.message.reply_text(message, reply_markup=keyboard)
+
+# =========================
+# ⴰⵙⵙⵓⵜⵔ ⵏ ⵓⵙⵎⵉⵍ ⵏ Mini App
+# =========================
+async def handle_webapp_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.message.from_user
+    data = update.message.web_app_data.data
+
+    report = (
+        "📥 ⵉⵜⵜⵡⴰⵙⵙⵏ ⵓⵙⵎⵉⵍ ⴰⵎⴰⵢⵏⵓ\n"
+        "=========================\n"
+        f"👤 ⵉⵙⵎ: {user.first_name}\n"
+        f"🆔 ID: {user.id}\n\n"
+        "📦 ⵓⵙⵎⵉⵍ:\n"
+        f"{data}"
+    )
+
+    # 🔒 ⵉⵜⵜⵡⴰⵙⵙⵏ ⴽⴽⵉ ⵖⴰⵙ
     await context.bot.send_message(
         chat_id=ADMIN_ID,
-        text=f"📩 رسالة جديدة:\n{update.message.text}"
+        text=report
     )
-    await update.message.reply_text("✔️ تم الاستلام")
 
-async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    photo = update.message.photo[-1]
-    await context.bot.send_photo(
-        chat_id=ADMIN_ID,
-        photo=photo.file_id,
-        caption="📷 صورة جديدة"
-    )
-    await update.message.reply_text("✔️ تم إرسال الصورة")
+    await update.message.reply_text("✅ ⵉⵜⵜⵡⴰⵙⵙⵏ ⵙ ⵜⵓⵙⴷⵉⵜ، ⵜⴰⵏⵎⵎⵉⵔⵜ.")
 
-async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    voice = update.message.voice
-    await context.bot.send_voice(
-        chat_id=ADMIN_ID,
-        voice=voice.file_id,
-        caption="🎤 تسجيل صوتي"
-    )
-    await update.message.reply_text("✔️ تم إرسال الصوت")
-
-async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    loc = update.message.location
-    await context.bot.send_message(
-        chat_id=ADMIN_ID,
-        text=f"📍 موقع جديد:\nLatitude: {loc.latitude}\nLongitude: {loc.longitude}"
-    )
-    await update.message.reply_text("✔️ تم إرسال الموقع")
-
+# =========================
+# ⵜⴰⵙⵙⵓⵜ ⵏ ⵓⴱⵓⵜ
+# =========================
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
-    app.add_handler(MessageHandler(filters.LOCATION, handle_location))
+    app.add_handler(
+        MessageHandler(
+            filters.StatusUpdate.WEB_APP_DATA,
+            handle_webapp_data
+        )
+    )
 
     await app.run_polling()
 
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-    
